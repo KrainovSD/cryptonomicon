@@ -107,9 +107,8 @@ body {
 
 .workplace {
   margin: 0px auto 0px auto;
-  min-width: 1200px;
   max-width: 1200px;
-  border: 1px black solid;
+  width: 100%;
   padding: 20px;
 }
 
@@ -169,7 +168,7 @@ body {
   border-radius: 0.25rem;
 }
 
-.beautifulButton {
+.addButton {
   cursor: pointer;
   width: 110px;
   height: 40px;
@@ -185,18 +184,81 @@ body {
   background-color: rgba(8, 107, 255, 0.959);
 }
 
-.beautifulButton:active {
+.addButton:active {
   top: 1px;
   background-color: rgba(18, 1, 112, 0.959);
 }
 
-.beautifulButton__img {
+.addButton__img {
   width: 17px;
   height: 17px;
   margin: auto 10px auto 10px;
 }
 
-.beautifulButton__caption {
+.addButton__caption {
   color: white;
   margin: auto 10px auto 0px;
+}
+
+.viewField {
+  border-top: 2px #bdbdbd solid;
+  border-bottom: 2px #bdbdbd solid;
+  margin-top: 30px;
+  padding: 20px 0px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-grid-columns: (minmax(150px, 1fr))[auto-fit];
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-gap: 30px;
+}
+
+.viewCard {
+  width: 300px;
+  border-bottom: 1px #bdbdbd solid;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-transition: all 0.1s;
+  transition: all 0.1s;
+}
+
+.viewCard:hover {
+  border: 3px #7c037c solid;
+  border-radius: 0.5rem;
+}
+
+.viewCard__header {
+  color: #bdbdbd;
+  margin: 20px auto 12px auto;
+}
+
+.viewCard__info {
+  font-weight: 700;
+  font-size: 2rem;
+  margin: 0px auto 50px auto;
+}
+
+.deleteButton {
+  width: 82px;
+  margin: 0px auto 20px auto;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.deleteButton__img {
+  width: 20px;
+  margin-right: 10px;
+  height: 20px;
+}
+
+.deleteButton__caption {
+  color: #bdbdbd;
 }
