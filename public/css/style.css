@@ -1,0 +1,202 @@
+@charset "UTF-8";
+* {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+*, *::before, *::after {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+:focus, :active {
+  outline: none;
+}
+
+a:focus, a:active {
+  outline: none;
+}
+
+nav, footer, header, aside {
+  display: block;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-size: 100%;
+  line-height: 1;
+  font-size: 14px;
+  -ms-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+input, button, textarea {
+  font-family: inherit;
+}
+
+input::-ms-clear {
+  display: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+button::-moz-focus-inner {
+  padding: 0;
+  border: 0;
+}
+
+a, a:visited {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+ul li {
+  list-style: none;
+}
+
+img {
+  vertical-align: top;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: 400;
+}
+
+/*
+1. Убирает все лишние отсупы у всех тегов
+2. Расчет алгаритма ширины блока включает значение полей(padding), границ(border), но не отступов(margin)
+3. Убирает обводку при фокусе и нажатии
+4. Убирает обводку у ссылки при фокусе и нажатии
+5. Делает теги блочным элементом
+6. Устанавливает для страницы: полный размер, размер текста, расстояние между строк установлено по размеру шрифта, отключает на мобильных браузеров автоматическое масштабирование текста на маленьких экранах
+7. Наследует шрифт у родителя в тегах ввода
+8. Убирает в IE крестик при вводе информации в input
+9. Устанавливает для всех кнопок иной курсор
+10. Убирает в Mozzila отступы у кнопок
+11,12. Убирает у ссылок подчеркивание
+13. Убирает у маркированного списка стиль маркера
+14. Выравнивает картинку по верхнему краю
+15. Обнуляет стили заголовков
+*/
+body {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+      user-select: none;
+}
+
+/* Отключает возможность выделения элементов страницы*/
+body {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+.workplace {
+  margin: 0px auto 0px auto;
+  min-width: 1200px;
+  max-width: 1200px;
+  border: 1px black solid;
+  padding: 20px;
+}
+
+.addTool__header {
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.addTool__input {
+  margin-bottom: 10px;
+  display: block;
+  width: 30%;
+  height: 2.5rem;
+  padding: 0.375rem 0.75rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  background-clip: padding-box;
+  border-bottom: 1px solid #bdbdbd;
+  -webkit-transition: border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, -webkit-box-shadow 0.15s ease-in-out;
+}
+
+.addTool__input::-webkit-input-placeholder {
+  color: #212529;
+  opacity: 0.4;
+}
+
+.addTool__input:-ms-input-placeholder {
+  color: #212529;
+  opacity: 0.4;
+}
+
+.addTool__input::-ms-input-placeholder {
+  color: #212529;
+  opacity: 0.4;
+}
+
+.addTool__input::placeholder {
+  color: #212529;
+  opacity: 0.4;
+}
+
+.addTool__input:focus {
+  color: #212529;
+  background-color: #fff;
+  border-color: #bdbdbd;
+  outline: 0;
+  -webkit-box-shadow: 0 0 0 0.2rem rgba(158, 158, 158, 0.25);
+          box-shadow: 0 0 0 0.2rem rgba(158, 158, 158, 0.25);
+  border: 1px solid #bdbdbd;
+  border-radius: 0.25rem;
+}
+
+.beautifulButton {
+  cursor: pointer;
+  width: 110px;
+  height: 40px;
+  border-radius: 20px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  background-color: rgba(8, 107, 255, 0.959);
+}
+
+.beautifulButton:active {
+  top: 1px;
+  background-color: rgba(18, 1, 112, 0.959);
+}
+
+.beautifulButton__img {
+  width: 17px;
+  height: 17px;
+  margin: auto 10px auto 10px;
+}
+
+.beautifulButton__caption {
+  color: white;
+  margin: auto 10px auto 0px;
+}
