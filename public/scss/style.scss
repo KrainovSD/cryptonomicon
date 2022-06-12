@@ -1,6 +1,6 @@
 @import "_custom";
 
-body{
+body {
     display: flex;
     flex-direction: column;
 }
@@ -10,6 +10,7 @@ body{
     max-width: 1200px;
     width: 100%;
     padding: 20px;
+    height: 100vh;
 }
 
 .addTool {
@@ -34,11 +35,13 @@ body{
         background-clip: padding-box;
         border-bottom: 1px solid #bdbdbd;
         transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        &::placeholder{
+
+        &::placeholder {
             color: #212529;
             opacity: 0.4;
         }
-        &:focus{
+
+        &:focus {
             color: #212529;
             background-color: #fff;
             border-color: #bdbdbd;
@@ -49,6 +52,7 @@ body{
         }
     }
 }
+
 .addButton {
     cursor: pointer;
     width: 110px;
@@ -58,11 +62,13 @@ body{
     position: relative;
     flex-direction: row;
     background-color: rgba(8, 107, 255, 0.959);
-    &:active{
+
+    &:active {
         top: 1px;
         background-color: rgba(18, 1, 112, 0.959);
     }
-    &__img{
+
+    &__img {
         width: 17px;
         height: 17px;
         margin: auto 10px auto 10px;
@@ -79,21 +85,24 @@ body{
     border-bottom: 2px #bdbdbd solid;
     margin-top: 30px;
     padding: 20px 0px;
-    display: flex;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     grid-gap: 30px;
-    
+
 }
+
 .viewCard {
-    width: 300px;
+    max-width: 366px;
     border-bottom: 1px #bdbdbd solid;
     display: flex;
     flex-direction: column;
     transition: all 0.1s;
-    &:hover{
+
+    &:hover {
         border: 3px rgb(124, 3, 124) solid;
         border-radius: 0.5rem;
     }
+
     &__header {
         color: #bdbdbd;
         margin: 20px auto 12px auto;
@@ -105,18 +114,56 @@ body{
         margin: 0px auto 50px auto;
     }
 }
+
 .deleteButton {
     width: 82px;
     margin: 0px auto 20px auto;
     display: flex;
     line-height: 1.5;
     cursor: pointer;
+
     &__img {
         width: 20px;
         margin-right: 10px;
         height: 20px;
     }
+
     &__caption {
         color: #bdbdbd;
+    }
+}
+
+.viewGraph {
+    width: 100%;
+
+    &__header {
+        margin-top: 40px;
+        display: flex;
+
+        & p {
+            margin: auto auto auto 0px;
+        }
+
+        & img {
+            margin: 0px 0px 0px auto;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+        }
+    }
+
+    &__graph {
+        border-left: 1px purple solid;
+        border-bottom: 1px purple solid;
+        width: 100%;
+        height: 250px;
+        margin-top: 20px;
+        display: flex;
+
+        & div {
+            width: 40px;
+            background-color: purple;
+            margin: auto 1px 0px 0px;
+        }
     }
 }

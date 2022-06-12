@@ -110,6 +110,7 @@ body {
   max-width: 1200px;
   width: 100%;
   padding: 20px;
+  height: 100vh;
 }
 
 .addTool__header {
@@ -205,16 +206,15 @@ body {
   border-bottom: 2px #bdbdbd solid;
   margin-top: 30px;
   padding: 20px 0px;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -ms-grid-columns: (minmax(150px, 1fr))[auto-fit];
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  display: -ms-grid;
+  display: grid;
+  -ms-grid-columns: (minmax(250px, 1fr))[auto-fit];
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   grid-gap: 30px;
 }
 
 .viewCard {
-  width: 300px;
+  max-width: 366px;
   border-bottom: 1px #bdbdbd solid;
   display: -webkit-box;
   display: -ms-flexbox;
@@ -261,4 +261,43 @@ body {
 
 .deleteButton__caption {
   color: #bdbdbd;
+}
+
+.viewGraph {
+  width: 100%;
+}
+
+.viewGraph__header {
+  margin-top: 40px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.viewGraph__header p {
+  margin: auto auto auto 0px;
+}
+
+.viewGraph__header img {
+  margin: 0px 0px 0px auto;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+}
+
+.viewGraph__graph {
+  border-left: 1px purple solid;
+  border-bottom: 1px purple solid;
+  width: 100%;
+  height: 250px;
+  margin-top: 20px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.viewGraph__graph div {
+  width: 40px;
+  background-color: purple;
+  margin: auto 1px 0px 0px;
 }
