@@ -62,6 +62,7 @@ export default {
       card: [],
       graph: null,
       bar: [],
+      cardInfo: [],
     };
   },
 
@@ -71,7 +72,7 @@ export default {
       this.card.push(newTicker);
       this.ticker = "";
 
-      setInterval(async () => {
+      let x = setInterval(async () => {
         const f = await fetch(
           `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api-key=4f4fc1a98c2ab56170cf7eba355106ec116a599e96a2629f19c933ea1c2c9f3d`
         );
@@ -83,9 +84,17 @@ export default {
           this.bar.push(data.USD);
         }
       }, 3000);
+      this.cardInfo.push({ name: newTicker.name, id: x }); //
     },
     delCard(id) {
       if (this.graph == this.card[id]) this.delGraph();
+
+      let idInfo = this.cardInfo.findIndex(
+        (t) => t.name === this.card[id].name
+      );
+      clearInterval(this.cardInfo[idInfo].id);
+      this.cardInfo.splice(idInfo, 1);
+
       this.card.splice(id, 1);
     },
     delGraph() {
