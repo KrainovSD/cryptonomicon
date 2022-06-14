@@ -202,6 +202,7 @@ body {
 }
 
 .viewField {
+  width: 100%;
   border-top: 2px #bdbdbd solid;
   border-bottom: 2px #bdbdbd solid;
   margin-top: 30px;
@@ -223,11 +224,10 @@ body {
   -webkit-box-direction: normal;
       -ms-flex-direction: column;
           flex-direction: column;
-  -webkit-transition: all 0.1s;
-  transition: all 0.1s;
+  position: relative;
 }
 
-.viewCard:hover {
+.viewCard_active {
   border: 3px #7c037c solid;
   border-radius: 0.5rem;
 }
@@ -298,6 +298,7 @@ body {
 
 .viewGraph__graph div {
   width: 40px;
+  max-height: 100%;
   background-color: purple;
   margin: auto 1px 0px 0px;
 }

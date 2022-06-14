@@ -81,6 +81,7 @@ body {
 }
 
 .viewField {
+    width: 100%;
     border-top: 2px #bdbdbd solid;
     border-bottom: 2px #bdbdbd solid;
     margin-top: 30px;
@@ -96,9 +97,10 @@ body {
     border-bottom: 1px #bdbdbd solid;
     display: flex;
     flex-direction: column;
-    transition: all 0.1s;
 
-    &:hover {
+    position: relative;
+
+    &_active {
         border: 3px rgb(124, 3, 124) solid;
         border-radius: 0.5rem;
     }
@@ -162,6 +164,7 @@ body {
 
         & div {
             width: 40px;
+            max-height: 100%;
             background-color: purple;
             margin: auto 1px 0px 0px;
         }
