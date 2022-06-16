@@ -8,7 +8,25 @@
         placeholder="write the name"
         v-model="ticker"
         @keydown.enter="addCard"
+        @input="checkHint"
       />
+
+      <div v-if="compare.length > 0" class="addTool__hint">
+        <template v-for="(key, indx) in compare" :key="indx">
+          <div
+            @click="
+              ticker = key;
+              addCard();
+            "
+            v-if="indx < 4"
+          >
+            {{ key }}
+          </div>
+        </template>
+      </div>
+      <p v-if="errorMassage != ''" class="addTool__errorText">
+        {{ errorMassage }}
+      </p>
       <div class="addButton" @click="addCard">
         <img src="../public/image/plus.png" class="addButton__img" alt="" />
         <p class="addButton__caption">Добавить</p>
@@ -62,15 +80,51 @@ export default {
       card: [],
       graph: null,
       bar: [],
-      cardInfo: [],
+      properlyList: [],
+      errorMassage: "",
+      compare: [],
     };
   },
 
   methods: {
+    checkHint() {
+      this.compare = [];
+      this.errorMassage = "";
+      if (this.ticker === "") {
+        return false;
+      }
+      let currentTicker = new RegExp(`^${this.ticker.toLowerCase()}`, "g");
+
+      for (let key in this.properlyList) {
+        if (currentTicker.test(this.properlyList[key].Symbol.toLowerCase())) {
+          this.compare.push(this.properlyList[key].Symbol);
+        }
+      }
+    },
     addCard() {
+      let pattern = new RegExp(`^${this.ticker.toLowerCase()}$`);
+      this.errorMassage = "Выбранного вами тикера не существует";
+      for (let key in this.properlyList) {
+        if (pattern.test(this.properlyList[key].Symbol.toLowerCase())) {
+          this.errorMassage = "";
+          break;
+        }
+      }
+      for (let key in this.card) {
+        console.log(key);
+        if (pattern.test(this.card[key].name.toLowerCase())) {
+          this.errorMassage = "Выбранный тикер уже добавлен";
+        }
+      }
+
+      if (this.errorMassage != "") {
+        return false;
+      }
+
       const newTicker = { name: this.ticker, price: "-" };
       this.card.push(newTicker);
       this.ticker = "";
+      this.compare = [];
 
       let x = setInterval(async () => {
         const f = await fetch(
@@ -84,17 +138,11 @@ export default {
           this.bar.push(data.USD);
         }
       }, 3000);
-      this.cardInfo.push({ name: newTicker.name, id: x }); //
+      this.card.find((t) => t.name === newTicker.name).idInteval = x;
     },
     delCard(id) {
       if (this.graph == this.card[id]) this.delGraph();
-
-      let idInfo = this.cardInfo.findIndex(
-        (t) => t.name === this.card[id].name
-      );
-      clearInterval(this.cardInfo[idInfo].id);
-      this.cardInfo.splice(idInfo, 1);
-
+      clearInterval(this.card[id].idInteval);
       this.card.splice(id, 1);
     },
     delGraph() {
@@ -114,6 +162,16 @@ export default {
         return data;
       });
     },
+  },
+
+  created() {
+    (async function (a) {
+      let f = await fetch(
+        "https://min-api.cryptocompare.com/data/all/coinlist?summary=true"
+      );
+      let data = await f.json();
+      a.properlyList = data.Data;
+    })(this);
   },
 };
 </script>
