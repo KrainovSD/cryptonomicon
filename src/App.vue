@@ -32,10 +32,37 @@
         <p class="addButton__caption">Добавить</p>
       </div>
     </div>
+    <div class="filterTool">
+      <p class="filterTool__filterCaption">Фильтр:</p>
+      <input
+        v-model="filter"
+        @input="page = 1"
+        type="text"
+        class="filterTool__input"
+        placeholder="filter"
+      />
+      <div
+        :class="
+          page > 1 ? 'filterTool__buttonDown' : 'filterTool__buttonDown_disable'
+        "
+        @click="page--"
+      >
+        Назад
+      </div>
+      <p class="filterTool__pageCaption">{{ page }}</p>
+      <div
+        :class="
+          hasNextPage ? 'filterTool__buttonUp' : 'filterTool__buttonUp_disable'
+        "
+        @click="page++"
+      >
+        Вперед
+      </div>
+    </div>
     <div class="viewField" v-if="card.length > 0">
       <div
         class="viewCard"
-        v-for="(key, index) in card"
+        v-for="(key, index) in filterCard()"
         :key="index"
         @click="selectGraph(key)"
         :class="{
@@ -83,7 +110,33 @@ export default {
       properlyList: [],
       errorMassage: "",
       compare: [],
+      filter: "",
+      page: 1,
+      hasNextPage: true,
     };
+  },
+
+  created() {
+    let windowData = Object.fromEntries(
+      new URL(window.location).searchParams.entries()
+    );
+    if (windowData.filter) this.filter = windowData.filter;
+    if (windowData.page) this.page = windowData.page;
+
+    (async function (a) {
+      let f = await fetch(
+        "https://min-api.cryptocompare.com/data/all/coinlist?summary=true"
+      );
+      let data = await f.json();
+      a.properlyList = data.Data;
+    })(this);
+
+    if (localStorage.getItem("card")) {
+      this.card = JSON.parse(localStorage.getItem("card"));
+      this.card.forEach((el) => {
+        this.updateCard(el.name);
+      });
+    }
   },
 
   methods: {
@@ -93,57 +146,58 @@ export default {
       if (this.ticker === "") {
         return false;
       }
-      let currentTicker = new RegExp(`^${this.ticker.toLowerCase()}`, "g");
-
-      for (let key in this.properlyList) {
-        if (currentTicker.test(this.properlyList[key].Symbol.toLowerCase())) {
-          this.compare.push(this.properlyList[key].Symbol);
-        }
-      }
+      this.compare = Object.keys(this.properlyList).filter((f) =>
+        this.properlyList[f].Symbol.toLowerCase().includes(
+          this.ticker.toLowerCase()
+        )
+      );
+    },
+    filterCard() {
+      let cardOnPage = 6;
+      let startPage = (this.page - 1) * cardOnPage; // [0,5][6,11][12,17]
+      let filteredCard = this.card.filter((f) =>
+        f.name.toLowerCase().includes(this.filter.toLowerCase())
+      );
+      this.hasNextPage = filteredCard.length > this.page * 6;
+      return filteredCard.splice(startPage, cardOnPage);
     },
     addCard() {
       let pattern = new RegExp(`^${this.ticker.toLowerCase()}$`);
-      this.errorMassage = "Выбранного вами тикера не существует";
-      for (let key in this.properlyList) {
-        if (pattern.test(this.properlyList[key].Symbol.toLowerCase())) {
-          this.errorMassage = "";
-          break;
-        }
-      }
-      for (let key in this.card) {
-        console.log(key);
-        if (pattern.test(this.card[key].name.toLowerCase())) {
-          this.errorMassage = "Выбранный тикер уже добавлен";
-        }
-      }
-
-      if (this.errorMassage != "") {
+      /* 
+        check for exist ticker
+      */
+      if (
+        !Object.keys(this.properlyList).find((f) =>
+          this.properlyList[f].Symbol.toLowerCase().includes(
+            this.ticker.toLowerCase()
+          )
+        )
+      ) {
+        this.errorMassage = "Выбранный вами тикер не существует";
         return false;
       }
-
-      const newTicker = { name: this.ticker, price: "-" };
+      /* 
+        check for ticker is added
+      */
+      for (let key in this.card) {
+        if (pattern.test(this.card[key].name.toLowerCase())) {
+          this.errorMassage = "Выбранный тикер уже добавлен";
+          return false;
+        }
+      }
+      /* main logic */
+      const newTicker = { name: this.ticker.toUpperCase(), price: "-" };
       this.card.push(newTicker);
+      this.updateCard(newTicker.name);
       this.ticker = "";
       this.compare = [];
-
-      let x = setInterval(async () => {
-        const f = await fetch(
-          `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api-key=4f4fc1a98c2ab56170cf7eba355106ec116a599e96a2629f19c933ea1c2c9f3d`
-        );
-        const data = await f.json();
-        console.log(`${newTicker.name} = ${data.USD}`);
-        this.card.find((t) => t.name === newTicker.name).price =
-          data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
-        if (this.graph?.name === newTicker.name) {
-          this.bar.push(data.USD);
-        }
-      }, 3000);
-      this.card.find((t) => t.name === newTicker.name).idInteval = x;
+      localStorage.setItem("card", JSON.stringify(this.card));
     },
     delCard(id) {
       if (this.graph == this.card[id]) this.delGraph();
       clearInterval(this.card[id].idInteval);
       this.card.splice(id, 1);
+      localStorage.setItem("card", JSON.stringify(this.card));
     },
     delGraph() {
       this.graph = null;
@@ -162,16 +216,37 @@ export default {
         return data;
       });
     },
+    updateCard(tickerName) {
+      let x = setInterval(async () => {
+        const f = await fetch(
+          `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api-key=4f4fc1a98c2ab56170cf7eba355106ec116a599e96a2629f19c933ea1c2c9f3d`
+        );
+        const data = await f.json();
+        console.log(`${tickerName} = ${data.USD}`);
+        this.card.find((t) => t.name === tickerName).price =
+          data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
+        if (this.graph?.name === tickerName) {
+          this.bar.push(data.USD);
+        }
+      }, 300000);
+      this.card.find((t) => t.name === tickerName).idInteval = x;
+    },
   },
-
-  created() {
-    (async function (a) {
-      let f = await fetch(
-        "https://min-api.cryptocompare.com/data/all/coinlist?summary=true"
+  watch: {
+    filter() {
+      window.history.pushState(
+        null,
+        document.title,
+        `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
       );
-      let data = await f.json();
-      a.properlyList = data.Data;
-    })(this);
+    },
+    page() {
+      window.history.pushState(
+        null,
+        document.title,
+        `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
+      );
+    },
   },
 };
 </script>
