@@ -8,11 +8,11 @@
         placeholder="write the name"
         v-model="ticker"
         @keydown.enter="addCard"
-        @input="checkHint"
+        @input="errorMassage = ''"
       />
 
-      <div v-if="compare.length > 0" class="addTool__hint">
-        <template v-for="(key, indx) in compare" :key="indx">
+      <div v-if="comparedTiker.length > 0" class="addTool__hint">
+        <template v-for="(key, indx) in comparedTiker" :key="indx">
           <div
             @click="
               ticker = key;
@@ -62,11 +62,11 @@
     <div class="viewField" v-if="card.length > 0">
       <div
         class="viewCard"
-        v-for="(key, index) in filterCard()"
+        v-for="(key, index) in paginatedCard"
         :key="index"
-        @click="selectGraph(key)"
+        @click="selGraph = key"
         :class="{
-          viewCard_active: key == graph,
+          viewCard_active: key == selGraph,
         }"
       >
         <p class="viewCard__header">{{ key.name }} - USD</p>
@@ -81,14 +81,14 @@
         </div>
       </div>
     </div>
-    <div class="viewGraph" v-if="graph">
+    <div class="viewGraph" v-if="selGraph">
       <div class="viewGraph__header">
-        <p>{{ graph.name }} - USD</p>
-        <img src="../public/image/cancel.png" alt="" @click="delGraph" />
+        <p>{{ selGraph.name }} - USD</p>
+        <img src="../public/image/cancel.png" alt="" @click="selGraph = null" />
       </div>
       <div class="viewGraph__graph">
         <div
-          v-for="(hg, idx) in normalBar()"
+          v-for="(hg, idx) in normalizedBar"
           :key="idx"
           :style="`height: ${hg}%`"
         ></div>
@@ -104,15 +104,13 @@ export default {
   data() {
     return {
       ticker: "",
-      card: [],
-      graph: null,
-      bar: [],
-      properlyList: [],
-      errorMassage: "",
-      compare: [],
       filter: "",
       page: 1,
-      hasNextPage: true,
+      errorMassage: "",
+      card: [],
+      selGraph: null,
+      bar: [],
+      properlyList: [],
     };
   },
 
@@ -139,31 +137,55 @@ export default {
     }
   },
 
-  methods: {
-    checkHint() {
-      this.compare = [];
-      this.errorMassage = "";
+  computed: {
+    comparedTiker() {
       if (this.ticker === "") {
         return false;
       }
-      this.compare = Object.keys(this.properlyList).filter((f) =>
+      return Object.keys(this.properlyList).filter((f) =>
         this.properlyList[f].Symbol.toLowerCase().includes(
           this.ticker.toLowerCase()
         )
       );
     },
-    filterCard() {
-      let cardOnPage = 6;
-      let startPage = (this.page - 1) * cardOnPage; // [0,5][6,11][12,17]
-      let filteredCard = this.card.filter((f) =>
+    /* where do i should store constants like this?? */
+    cardOnPage() {
+      return 6;
+    },
+    startIndexPage() {
+      return (this.page - 1) * this.cardOnPage; // [0,5][6,11][12,17]
+    },
+    endIndexPage() {
+      return this.page * this.cardOnPage - 1;
+    },
+    filteredCard() {
+      return this.card.filter((f) =>
         f.name.toLowerCase().includes(this.filter.toLowerCase())
       );
-      this.hasNextPage = filteredCard.length > this.page * 6;
-      return filteredCard.splice(startPage, cardOnPage);
     },
+    paginatedCard() {
+      return this.filteredCard.slice(
+        this.startIndexPage,
+        this.endIndexPage + 1
+      );
+    },
+    hasNextPage() {
+      return this.filteredCard.length > this.page * 6;
+    },
+    normalizedBar() {
+      const maxP = Math.max(...this.bar);
+      const minP = Math.min(...this.bar);
+      if (maxP - minP == 0) return this.bar.map(() => 50);
+      return this.bar.map(
+        (price) => 5 + ((price - minP) * 100) / (maxP - minP)
+      );
+    },
+  },
+
+  methods: {
     addCard() {
       let pattern = new RegExp(`^${this.ticker.toLowerCase()}$`);
-      /* 
+      /*
         check for exist ticker
       */
       if (
@@ -176,7 +198,7 @@ export default {
         this.errorMassage = "Выбранный вами тикер не существует";
         return false;
       }
-      /* 
+      /*
         check for ticker is added
       */
       for (let key in this.card) {
@@ -187,34 +209,14 @@ export default {
       }
       /* main logic */
       const newTicker = { name: this.ticker.toUpperCase(), price: "-" };
-      this.card.push(newTicker);
+      this.card = [...this.card, newTicker];
       this.updateCard(newTicker.name);
       this.ticker = "";
-      this.compare = [];
-      localStorage.setItem("card", JSON.stringify(this.card));
     },
     delCard(id) {
-      if (this.graph == this.card[id]) this.delGraph();
+      if (this.selGraph == this.card[id]) this.selGraph = null;
       clearInterval(this.card[id].idInteval);
       this.card.splice(id, 1);
-      localStorage.setItem("card", JSON.stringify(this.card));
-    },
-    delGraph() {
-      this.graph = null;
-      this.bar = [];
-    },
-    selectGraph(ticker) {
-      this.graph = ticker;
-      this.bar = [];
-    },
-    normalBar() {
-      const maxP = Math.max(...this.bar);
-      const minP = Math.min(...this.bar);
-      return this.bar.map((price) => {
-        let data = 5 + ((price - minP) * 100) / (maxP - minP);
-        if (isNaN(data)) data = 5;
-        return data;
-      });
     },
     updateCard(tickerName) {
       let x = setInterval(async () => {
@@ -225,7 +227,7 @@ export default {
         console.log(`${tickerName} = ${data.USD}`);
         this.card.find((t) => t.name === tickerName).price =
           data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
-        if (this.graph?.name === tickerName) {
+        if (this.selGraph?.name === tickerName) {
           this.bar.push(data.USD);
         }
       }, 300000);
@@ -233,6 +235,15 @@ export default {
     },
   },
   watch: {
+    card() {
+      localStorage.setItem("card", JSON.stringify(this.card));
+    },
+    paginatedCard() {
+      if (this.paginatedCard === 0 && this.page > 1) this.page--;
+    },
+    selGraph() {
+      this.bar = [];
+    },
     filter() {
       window.history.pushState(
         null,
