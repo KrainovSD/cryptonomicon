@@ -98,6 +98,8 @@
 </template>
 
 <script>
+import { subscribeToUpdate, unsubscribeToUpdate, API_KEY } from "./API/api";
+
 export default {
   name: "App",
 
@@ -118,23 +120,40 @@ export default {
     let windowData = Object.fromEntries(
       new URL(window.location).searchParams.entries()
     );
-    if (windowData.filter) this.filter = windowData.filter;
-    if (windowData.page) this.page = windowData.page;
+    const VALID_KEYS = ["filter", "page"];
+    VALID_KEYS.forEach((key) => {
+      if (windowData[key]) this[key] = windowData[key];
+    });
 
-    (async function (a) {
+    (async function (t) {
       let f = await fetch(
         "https://min-api.cryptocompare.com/data/all/coinlist?summary=true"
       );
       let data = await f.json();
-      a.properlyList = data.Data;
+      t.properlyList = data.Data;
     })(this);
 
-    if (localStorage.getItem("card")) {
-      this.card = JSON.parse(localStorage.getItem("card"));
-      this.card.forEach((el) => {
-        this.updateCard(el.name);
-      });
-    }
+    (async function (t) {
+      if (localStorage.getItem("card")) {
+        t.card = JSON.parse(localStorage.getItem("card"));
+        let tickersList = [];
+        Object.values(t.card).forEach((el) => tickersList.push(el.name));
+        let price = await fetch(
+          `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tickersList.join(
+            ","
+          )}&tsyms=USD&api-key=${API_KEY}`
+        );
+        let data = await price.json();
+        Object.keys(data).forEach((el) => {
+          t.updateCard(el, data[el].USD);
+        });
+        t.card.forEach((el) =>
+          subscribeToUpdate(el.name, (newPrice) =>
+            t.updateCard(el.name, newPrice)
+          )
+        );
+      }
+    })(this);
   },
 
   computed: {
@@ -210,28 +229,21 @@ export default {
       /* main logic */
       const newTicker = { name: this.ticker.toUpperCase(), price: "-" };
       this.card = [...this.card, newTicker];
-      this.updateCard(newTicker.name);
+      subscribeToUpdate(newTicker.name, (newPrice) =>
+        this.updateCard(newTicker.name, newPrice)
+      );
       this.ticker = "";
     },
     delCard(id) {
       if (this.selGraph == this.card[id]) this.selGraph = null;
       clearInterval(this.card[id].idInteval);
+      unsubscribeToUpdate(this.card[id].name);
       this.card.splice(id, 1);
     },
-    updateCard(tickerName) {
-      let x = setInterval(async () => {
-        const f = await fetch(
-          `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api-key=4f4fc1a98c2ab56170cf7eba355106ec116a599e96a2629f19c933ea1c2c9f3d`
-        );
-        const data = await f.json();
-        console.log(`${tickerName} = ${data.USD}`);
-        this.card.find((t) => t.name === tickerName).price =
-          data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
-        if (this.selGraph?.name === tickerName) {
-          this.bar.push(data.USD);
-        }
-      }, 300000);
-      this.card.find((t) => t.name === tickerName).idInteval = x;
+    updateCard(tickerName, newPrice) {
+      if (this.selGraph?.name == tickerName) this.bar.push(newPrice);
+      this.card.find((el) => el.name == tickerName).price =
+        newPrice > 1 ? newPrice.toFixed(2) : newPrice.toPrecision(2);
     },
   },
   watch: {

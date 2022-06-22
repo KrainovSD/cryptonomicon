@@ -110,6 +110,7 @@ body {
   max-width: 1200px;
   width: 100%;
   padding: 20px;
+  background-color: #f1f1f1;
 }
 
 .addTool__header {
@@ -372,6 +373,7 @@ body {
       -ms-flex-direction: column;
           flex-direction: column;
   position: relative;
+  background-color: white;
 }
 
 .viewCard_active {
@@ -433,8 +435,8 @@ body {
 }
 
 .viewGraph__graph {
-  border-left: 1px purple solid;
-  border-bottom: 1px purple solid;
+  border-left: 3px purple solid;
+  border-bottom: 3px purple solid;
   width: 100%;
   height: 250px;
   margin-top: 20px;
