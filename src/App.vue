@@ -98,7 +98,9 @@
 </template>
 
 <script>
-import { subscribeToUpdate, unsubscribeToUpdate, API_KEY } from "./API/api";
+import { subscribeToUpdate, unsubscribeToUpdate } from "./API/api";
+import { getUrl, setUrl } from "./urlManager";
+import { getStorage, setStorage } from "./persistentStorage";
 
 export default {
   name: "App",
@@ -117,12 +119,15 @@ export default {
   },
 
   created() {
-    let windowData = Object.fromEntries(
-      new URL(window.location).searchParams.entries()
-    );
-    const VALID_KEYS = ["filter", "page"];
-    VALID_KEYS.forEach((key) => {
-      if (windowData[key]) this[key] = windowData[key];
+    let ulrProperties = getUrl();
+    Object.keys(ulrProperties).forEach((el) => {
+      this[el] = ulrProperties[el];
+    });
+    window.addEventListener("popstate", () => {
+      let ulrProperties = getUrl();
+      Object.keys(ulrProperties).forEach((el) => {
+        this[el] = ulrProperties[el];
+      });
     });
 
     (async function (t) {
@@ -133,27 +138,12 @@ export default {
       t.properlyList = data.Data;
     })(this);
 
-    (async function (t) {
-      if (localStorage.getItem("card")) {
-        t.card = JSON.parse(localStorage.getItem("card"));
-        let tickersList = [];
-        Object.values(t.card).forEach((el) => tickersList.push(el.name));
-        let price = await fetch(
-          `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${tickersList.join(
-            ","
-          )}&tsyms=USD&api-key=${API_KEY}`
-        );
-        let data = await price.json();
-        Object.keys(data).forEach((el) => {
-          t.updateCard(el, data[el].USD);
-        });
-        t.card.forEach((el) =>
-          subscribeToUpdate(el.name, (newPrice) =>
-            t.updateCard(el.name, newPrice)
-          )
-        );
-      }
-    })(this);
+    this.card = getStorage();
+    this.card.forEach((el) =>
+      subscribeToUpdate(el.name, (newPrice) =>
+        this.updateCard(el.name, newPrice)
+      )
+    );
   },
 
   computed: {
@@ -198,6 +188,12 @@ export default {
       return this.bar.map(
         (price) => 5 + ((price - minP) * 100) / (maxP - minP)
       );
+    },
+    filters() {
+      return [
+        ["filter", this.filter],
+        ["page", this.page],
+      ];
     },
   },
 
@@ -245,10 +241,11 @@ export default {
       this.card.find((el) => el.name == tickerName).price =
         newPrice > 1 ? newPrice.toFixed(2) : newPrice.toPrecision(2);
     },
+    test() {},
   },
   watch: {
     card() {
-      localStorage.setItem("card", JSON.stringify(this.card));
+      setStorage(this.card);
     },
     paginatedCard() {
       if (this.paginatedCard === 0 && this.page > 1) this.page--;
@@ -256,19 +253,8 @@ export default {
     selGraph() {
       this.bar = [];
     },
-    filter() {
-      window.history.pushState(
-        null,
-        document.title,
-        `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
-      );
-    },
-    page() {
-      window.history.pushState(
-        null,
-        document.title,
-        `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
-      );
+    filters() {
+      setUrl(this.filters);
     },
   },
 };
