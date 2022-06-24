@@ -6,5 +6,6 @@ export function getStorage(){
         let card = JSON.parse(localStorage.getItem("card"));
         card.map((i) => (i.price = "-"));
         return card;
-      }
+    }
+    return [];
 }

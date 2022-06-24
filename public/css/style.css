@@ -392,6 +392,10 @@ body {
   margin: 0px auto 50px auto;
 }
 
+.bg-red {
+  background-color: rgba(252, 189, 189, 0.336);
+}
+
 .deleteButton {
   width: 82px;
   margin: 0px auto 20px auto;

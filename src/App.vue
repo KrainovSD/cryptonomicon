@@ -67,11 +67,16 @@
         @click="selGraph = key"
         :class="{
           viewCard_active: key == selGraph,
+          'bg-red': key.work == false,
         }"
       >
         <p class="viewCard__header">{{ key.name }} - USD</p>
         <p class="viewCard__info">{{ key.price }}</p>
-        <div class="deleteButton" @click.stop="delCard(index)" :data-id="index">
+        <div
+          class="deleteButton"
+          @click.stop="delCard(key.name)"
+          :data-id="index"
+        >
           <img
             src="../public/image/basket.png"
             alt=""
@@ -230,25 +235,30 @@ export default {
       );
       this.ticker = "";
     },
-    delCard(id) {
-      if (this.selGraph == this.card[id]) this.selGraph = null;
-      clearInterval(this.card[id].idInteval);
-      unsubscribeToUpdate(this.card[id].name);
-      this.card.splice(id, 1);
+    delCard(tickerName) {
+      if (this.selGraph?.name == tickerName) this.selGraph = null;
+      unsubscribeToUpdate(tickerName);
+      this.card = this.card.filter((el) => el.name !== tickerName);
     },
     updateCard(tickerName, newPrice) {
-      if (this.selGraph?.name == tickerName) this.bar.push(newPrice);
-      this.card.find((el) => el.name == tickerName).price =
-        newPrice > 1 ? newPrice.toFixed(2) : newPrice.toPrecision(2);
+      if (typeof newPrice !== "number") {
+        this.card.find((el) => el.name == tickerName)["work"] = false;
+        return;
+      }
+      if (this.selGraph?.name == tickerName) {
+        this.bar.push(newPrice);
+        this.card.find((el) => el.name == tickerName).price =
+          newPrice > 1 ? newPrice.toFixed(2) : newPrice.toPrecision(2);
+        this.card.find((el) => el.name == tickerName)["work"] = true;
+      }
     },
-    test() {},
   },
   watch: {
     card() {
       setStorage(this.card);
     },
     paginatedCard() {
-      if (this.paginatedCard === 0 && this.page > 1) this.page--;
+      if (this.paginatedCard.length === 0 && this.page > 1) this.page--;
     },
     selGraph() {
       this.bar = [];

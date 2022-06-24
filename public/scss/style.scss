@@ -233,6 +233,7 @@ body {
         border-radius: 0.5rem;
     }
 
+
     &__header {
         color: #bdbdbd;
         margin: 20px auto 12px auto;
@@ -243,6 +244,10 @@ body {
         font-size: 2rem;
         margin: 0px auto 50px auto;
     }
+}
+
+.bg-red {
+    background-color: rgba(252, 189, 189, 0.336);
 }
 
 .deleteButton {
