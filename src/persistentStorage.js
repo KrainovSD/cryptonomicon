@@ -1,5 +1,11 @@
+
+
 export function setStorage(card){
-    localStorage.setItem("card", JSON.stringify(card));
+    let cards = [];
+    card.forEach(e => {
+        cards.push({name: e.name, price: e.price})
+    });
+    localStorage.setItem("card", JSON.stringify(cards));
 }
 export function getStorage(){
     if (localStorage.getItem("card")) {

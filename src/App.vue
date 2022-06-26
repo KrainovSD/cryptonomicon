@@ -7,7 +7,7 @@
         class="addTool__input"
         placeholder="write the name"
         v-model="ticker"
-        @keydown.enter="addCard"
+        @keydown.enter="validationTicker"
         @input="errorMassage = ''"
       />
 
@@ -16,7 +16,7 @@
           <div
             @click="
               ticker = key;
-              addCard();
+              validationTicker();
             "
             v-if="indx < 4"
           >
@@ -27,7 +27,7 @@
       <p v-if="errorMassage != ''" class="addTool__errorText">
         {{ errorMassage }}
       </p>
-      <div class="addButton" @click="addCard">
+      <div class="addButton" @click="validationTicker">
         <img src="../public/image/plus.png" class="addButton__img" alt="" />
         <p class="addButton__caption">Добавить</p>
       </div>
@@ -103,7 +103,7 @@
 </template>
 
 <script>
-import { subscribeToUpdate, unsubscribeToUpdate } from "./API/api";
+import { subscribeToUpdate, unsubscribeToUpdate } from "./API/api_bd";
 import { getUrl, setUrl } from "./urlManager";
 import { getStorage, setStorage } from "./persistentStorage";
 
@@ -133,6 +133,23 @@ export default {
       Object.keys(ulrProperties).forEach((el) => {
         this[el] = ulrProperties[el];
       });
+    });
+    window.addEventListener("storage", () => {
+      let newCards = getStorage();
+      let difference = this.card.filter(
+        ({ name: id1 }) => !newCards.some(({ name: id2 }) => id2 === id1)
+      );
+      if (difference.length == 1) {
+        this.delCard(difference[0].name);
+        return;
+      }
+      difference = newCards.filter(
+        ({ name: id1 }) => !this.card.some(({ name: id2 }) => id2 === id1)
+      );
+      if (difference.length == 1) {
+        this.addCard(difference[0].name);
+        return;
+      }
     });
 
     (async function (t) {
@@ -203,7 +220,7 @@ export default {
   },
 
   methods: {
-    addCard() {
+    validationTicker() {
       let pattern = new RegExp(`^${this.ticker.toLowerCase()}$`);
       /*
         check for exist ticker
@@ -227,13 +244,15 @@ export default {
           return false;
         }
       }
-      /* main logic */
-      const newTicker = { name: this.ticker.toUpperCase(), price: "-" };
+      this.addCard(this.ticker);
+      this.ticker = "";
+    },
+    addCard(currentTicker) {
+      const newTicker = { name: currentTicker.toUpperCase(), price: "-" };
       this.card = [...this.card, newTicker];
       subscribeToUpdate(newTicker.name, (newPrice) =>
         this.updateCard(newTicker.name, newPrice)
       );
-      this.ticker = "";
     },
     delCard(tickerName) {
       if (this.selGraph?.name == tickerName) this.selGraph = null;
@@ -245,12 +264,10 @@ export default {
         this.card.find((el) => el.name == tickerName)["work"] = false;
         return;
       }
-      if (this.selGraph?.name == tickerName) {
-        this.bar.push(newPrice);
-        this.card.find((el) => el.name == tickerName).price =
-          newPrice > 1 ? newPrice.toFixed(2) : newPrice.toPrecision(2);
-        this.card.find((el) => el.name == tickerName)["work"] = true;
-      }
+      if (this.selGraph?.name == tickerName) this.bar.push(newPrice);
+      this.card.find((el) => el.name == tickerName).price =
+        newPrice > 1 ? newPrice.toFixed(2) : newPrice.toPrecision(2);
+      this.card.find((el) => el.name == tickerName)["work"] = true;
     },
   },
   watch: {
