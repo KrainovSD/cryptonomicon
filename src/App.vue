@@ -103,7 +103,7 @@
 </template>
 
 <script>
-import { subscribeToUpdate, unsubscribeToUpdate } from "./API/api_bd";
+import { subscribeToUpdate, unsubscribeToUpdate } from "./API/api_cw";
 import { getUrl, setUrl } from "./urlManager";
 import { getStorage, setStorage } from "./persistentStorage";
 

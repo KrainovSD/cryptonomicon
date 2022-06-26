@@ -115,7 +115,7 @@ function connectToWeb(){
     sessionStorage.setItem('mainTab', true);
     socket = new WebSocket(`wss://streamer.cryptocompare.com/v2?api_key=${API_KEY}`);
     console.log(subscribedTikers.keys())
-    if (!(subscribedTikers == 0)){
+    if (!(subscribedTikers.size == 0)){
         for(let key of subscribedTikers.keys()){
             subscribeToWB(key);
         }
