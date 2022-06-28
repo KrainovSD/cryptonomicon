@@ -91,11 +91,12 @@
         <p>{{ selGraph.name }} - USD</p>
         <img src="../public/image/cancel.png" alt="" @click="selGraph = null" />
       </div>
-      <div class="viewGraph__graph">
+      <div class="viewGraph__graph" ref="selGraph">
         <div
           v-for="(hg, idx) in normalizedBar"
           :key="idx"
           :style="`height: ${hg}%`"
+          ref="bar"
         ></div>
       </div>
     </div>
@@ -103,7 +104,7 @@
 </template>
 
 <script>
-import { subscribeToUpdate, unsubscribeToUpdate } from "./API/api_cw";
+import { subscribeToUpdate, unsubscribeToUpdate } from "./API/api_bd";
 import { getUrl, setUrl } from "./urlManager";
 import { getStorage, setStorage } from "./persistentStorage";
 
@@ -134,23 +135,7 @@ export default {
         this[el] = ulrProperties[el];
       });
     });
-    window.addEventListener("storage", () => {
-      let newCards = getStorage();
-      let difference = this.card.filter(
-        ({ name: id1 }) => !newCards.some(({ name: id2 }) => id2 === id1)
-      );
-      if (difference.length == 1) {
-        this.delCard(difference[0].name);
-        return;
-      }
-      difference = newCards.filter(
-        ({ name: id1 }) => !this.card.some(({ name: id2 }) => id2 === id1)
-      );
-      if (difference.length == 1) {
-        this.addCard(difference[0].name);
-        return;
-      }
-    });
+    window.addEventListener("storage", this.checkStorageChanges);
 
     (async function (t) {
       let f = await fetch(
@@ -166,6 +151,13 @@ export default {
         this.updateCard(el.name, newPrice)
       )
     );
+  },
+  mounted() {
+    window.addEventListener("resize", this.correctionBarItem);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.correctionBarItem);
+    window.removeEventListener("storage", this.checkStorageChanges);
   },
 
   computed: {
@@ -264,10 +256,45 @@ export default {
         this.card.find((el) => el.name == tickerName)["work"] = false;
         return;
       }
-      if (this.selGraph?.name == tickerName) this.bar.push(newPrice);
+      if (this.selGraph?.name == tickerName) {
+        this.bar = [...this.bar, newPrice];
+      }
       this.card.find((el) => el.name == tickerName).price =
         newPrice > 1 ? newPrice.toFixed(2) : newPrice.toPrecision(2);
       this.card.find((el) => el.name == tickerName)["work"] = true;
+    },
+    correctionBarItem() {
+      if (this.$refs.selGraph) {
+        if (this.bar.length > this.calculatedMaxItemBar()) {
+          let extra = this.bar.length - this.calculatedMaxItemBar();
+          this.bar.splice(0, extra);
+        }
+      }
+    },
+    calculatedMaxItemBar() {
+      let barWidth = 31;
+      this.$refs.bar?.length > 0
+        ? (barWidth = this.$refs.bar[0].clientWidth + 2)
+        : (barWidth = 31);
+      let selGraphWidth = this.$refs.selGraph.clientWidth;
+      return Math.floor(selGraphWidth / barWidth);
+    },
+    checkStorageChanges() {
+      let newCards = getStorage();
+      let difference = this.card.filter(
+        ({ name: id1 }) => !newCards.some(({ name: id2 }) => id2 === id1)
+      );
+      if (difference.length == 1) {
+        this.delCard(difference[0].name);
+        return;
+      }
+      difference = newCards.filter(
+        ({ name: id1 }) => !this.card.some(({ name: id2 }) => id2 === id1)
+      );
+      if (difference.length == 1) {
+        this.addCard(difference[0].name);
+        return;
+      }
     },
   },
   watch: {
@@ -282,6 +309,9 @@ export default {
     },
     filters() {
       setUrl(this.filters);
+    },
+    bar() {
+      this.$nextTick().then(this.correctionBarItem);
     },
   },
 };
