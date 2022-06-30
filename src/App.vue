@@ -1,37 +1,6 @@
 <template>
   <div class="workplace">
-    <div class="addTool">
-      <h2 class="addTool__header">Тикер</h2>
-      <input
-        type="text"
-        class="addTool__input"
-        placeholder="write the name"
-        v-model="ticker"
-        @keydown.enter="validationTicker"
-        @input="errorMassage = ''"
-      />
-
-      <div v-if="comparedTiker.length > 0" class="addTool__hint">
-        <template v-for="(key, indx) in comparedTiker" :key="indx">
-          <div
-            @click="
-              ticker = key;
-              validationTicker();
-            "
-            v-if="indx < 4"
-          >
-            {{ key }}
-          </div>
-        </template>
-      </div>
-      <p v-if="errorMassage != ''" class="addTool__errorText">
-        {{ errorMassage }}
-      </p>
-      <div class="addButton" @click="validationTicker">
-        <img src="../public/image/plus.png" class="addButton__img" alt="" />
-        <p class="addButton__caption">Добавить</p>
-      </div>
-    </div>
+    <add-ticker-panel @send-ticker="addCard" :cardList="card" />
     <div class="filterTool">
       <p class="filterTool__filterCaption">Фильтр:</p>
       <input
@@ -86,20 +55,11 @@
         </div>
       </div>
     </div>
-    <div class="viewGraph" v-if="selGraph">
-      <div class="viewGraph__header">
-        <p>{{ selGraph.name }} - USD</p>
-        <img src="../public/image/cancel.png" alt="" @click="selGraph = null" />
-      </div>
-      <div class="viewGraph__graph" ref="selGraph">
-        <div
-          v-for="(hg, idx) in normalizedBar"
-          :key="idx"
-          :style="`height: ${hg}%`"
-          ref="bar"
-        ></div>
-      </div>
-    </div>
+    <tickers-graph
+      @delete-graph="selGraph = null"
+      :selGraph="selGraph"
+      :barItem="barItem"
+    />
   </div>
 </template>
 
@@ -107,20 +67,23 @@
 import { subscribeToUpdate, unsubscribeToUpdate } from "./API/api_bd";
 import { getUrl, setUrl } from "./urlManager";
 import { getStorage, setStorage } from "./persistentStorage";
+import addTickerPanel from "./components/addTickerPanel.vue";
+import tickersGraph from "./components/tickersGraph.vue";
 
 export default {
   name: "App",
+  components: {
+    addTickerPanel,
+    tickersGraph,
+  },
 
   data() {
     return {
-      ticker: "",
       filter: "",
       page: 1,
-      errorMassage: "",
       card: [],
       selGraph: null,
-      bar: [],
-      properlyList: [],
+      barItem: 0,
     };
   },
 
@@ -137,14 +100,6 @@ export default {
     });
     window.addEventListener("storage", this.checkStorageChanges);
 
-    (async function (t) {
-      let f = await fetch(
-        "https://min-api.cryptocompare.com/data/all/coinlist?summary=true"
-      );
-      let data = await f.json();
-      t.properlyList = data.Data;
-    })(this);
-
     this.card = getStorage();
     this.card.forEach((el) =>
       subscribeToUpdate(el.name, (newPrice) =>
@@ -152,25 +107,11 @@ export default {
       )
     );
   },
-  mounted() {
-    window.addEventListener("resize", this.correctionBarItem);
-  },
   beforeUnmount() {
-    window.removeEventListener("resize", this.correctionBarItem);
     window.removeEventListener("storage", this.checkStorageChanges);
   },
 
   computed: {
-    comparedTiker() {
-      if (this.ticker === "") {
-        return false;
-      }
-      return Object.keys(this.properlyList).filter((f) =>
-        this.properlyList[f].Symbol.toLowerCase().includes(
-          this.ticker.toLowerCase()
-        )
-      );
-    },
     /* where do i should store constants like this?? */
     cardOnPage() {
       return 6;
@@ -195,14 +136,6 @@ export default {
     hasNextPage() {
       return this.filteredCard.length > this.page * 6;
     },
-    normalizedBar() {
-      const maxP = Math.max(...this.bar);
-      const minP = Math.min(...this.bar);
-      if (maxP - minP == 0) return this.bar.map(() => 50);
-      return this.bar.map(
-        (price) => 5 + ((price - minP) * 100) / (maxP - minP)
-      );
-    },
     filters() {
       return [
         ["filter", this.filter],
@@ -212,33 +145,6 @@ export default {
   },
 
   methods: {
-    validationTicker() {
-      let pattern = new RegExp(`^${this.ticker.toLowerCase()}$`);
-      /*
-        check for exist ticker
-      */
-      if (
-        !Object.keys(this.properlyList).find((f) =>
-          this.properlyList[f].Symbol.toLowerCase().includes(
-            this.ticker.toLowerCase()
-          )
-        )
-      ) {
-        this.errorMassage = "Выбранный вами тикер не существует";
-        return false;
-      }
-      /*
-        check for ticker is added
-      */
-      for (let key in this.card) {
-        if (pattern.test(this.card[key].name.toLowerCase())) {
-          this.errorMassage = "Выбранный тикер уже добавлен";
-          return false;
-        }
-      }
-      this.addCard(this.ticker);
-      this.ticker = "";
-    },
     addCard(currentTicker) {
       const newTicker = { name: currentTicker.toUpperCase(), price: "-" };
       this.card = [...this.card, newTicker];
@@ -257,27 +163,11 @@ export default {
         return;
       }
       if (this.selGraph?.name == tickerName) {
-        this.bar = [...this.bar, newPrice];
+        this.barItem = newPrice;
       }
       this.card.find((el) => el.name == tickerName).price =
         newPrice > 1 ? newPrice.toFixed(2) : newPrice.toPrecision(2);
       this.card.find((el) => el.name == tickerName)["work"] = true;
-    },
-    correctionBarItem() {
-      if (this.$refs.selGraph) {
-        if (this.bar.length > this.calculatedMaxItemBar()) {
-          let extra = this.bar.length - this.calculatedMaxItemBar();
-          this.bar.splice(0, extra);
-        }
-      }
-    },
-    calculatedMaxItemBar() {
-      let barWidth = 31;
-      this.$refs.bar?.length > 0
-        ? (barWidth = this.$refs.bar[0].clientWidth + 2)
-        : (barWidth = 31);
-      let selGraphWidth = this.$refs.selGraph.clientWidth;
-      return Math.floor(selGraphWidth / barWidth);
     },
     checkStorageChanges() {
       let newCards = getStorage();
@@ -304,14 +194,8 @@ export default {
     paginatedCard() {
       if (this.paginatedCard.length === 0 && this.page > 1) this.page--;
     },
-    selGraph() {
-      this.bar = [];
-    },
     filters() {
       setUrl(this.filters);
-    },
-    bar() {
-      this.$nextTick().then(this.correctionBarItem);
     },
   },
 };
