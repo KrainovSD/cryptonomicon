@@ -27,11 +27,7 @@
     <p v-if="errorMassage != ''" class="addTool__errorText">
       {{ errorMassage }}
     </p>
-    <div
-      class="addButton"
-      @click.stop="validationTicker"
-      disabled="disabledAddButton"
-    >
+    <div class="addButton" @click.stop="validationTicker">
       <img src="../../public/image/plus.png" class="addButton__img" alt="" />
       <p class="addButton__caption">Добавить</p>
     </div>
@@ -50,7 +46,7 @@ export default {
   },
 
   emits: {
-    "send-ticker": null,
+    "send-ticker": (value) => value === "string" && value.length > 0,
   },
 
   data() {
@@ -69,7 +65,6 @@ export default {
       let data = await f.json();
       t.properlyList = data.Data;
     })(this);
-    console.log(this.cardList);
   },
 
   computed: {
@@ -94,6 +89,10 @@ export default {
       /*
         check for exist ticker
       */
+      if (!this.disabledAddButton) {
+        this.errorMassage = "Добавлено максимальное количество тикеров";
+        return;
+      }
       if (this.ticker.trim() === "") {
         this.errorMassage = "Поле тикера пустое";
         return;
